@@ -2,6 +2,7 @@ import Gameboy from "serverboy"
 import fs from "fs"
 import { PNG } from 'pngjs';
 
+const scaleFactor = 3
 let inputData = {}
 
 let romName = process.env.romName || './roms/crystal'
@@ -51,7 +52,7 @@ async function getFrame() {
     let index = 0
     for (let i = 0; i < 144; i++) {
         for (let j = 0; j < 160; j++) {
-            for (let k = 0; k < 3; k++) {
+            for (let k = 0; k < scaleFactor; k++) {
                 resizedRow.push(screen[index])
                 resizedRow.push(screen[index+1])
                 resizedRow.push(screen[index+2])
@@ -59,13 +60,13 @@ async function getFrame() {
             }
             index+=4
         }
-        for (let k = 0; k < 3; k++) {
+        for (let k = 0; k < scaleFactor; k++) {
             resizedArr = resizedArr.concat(resizedRow)
         }
         resizedRow = []
     }
 
-    var png = new PNG({ width: 160 * 3, height: 144 * 3 });
+    var png = new PNG({ width: 160 * scaleFactor, height: 144 * scaleFactor});
     for (let i=0; i<resizedArr.length; i++) {
        png.data[i] = resizedArr[i];
     }
