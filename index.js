@@ -1,6 +1,6 @@
 import dotenv from "dotenv"
 dotenv.config()
-import { Client, Events, Collection, REST, Routes } from "discord.js"
+import { Client, Events, Collection, REST, Routes, GatewayIntentBits } from "discord.js"
 import game from "./game.js"
 import util from "./util.js"
 import path from "node:path"
@@ -9,7 +9,7 @@ import fs from "fs"
 const token = process.env.botToken
 
 // create the client lol
-const client = new Client({ intents: [] });
+const client = new Client({ intents: [GatewayIntentBits.GuildMembers] });
 
 
 client.on(Events.InteractionCreate, async(interaction) => {
@@ -21,7 +21,19 @@ client.on(Events.InteractionCreate, async(interaction) => {
             console.error(err)
         }
     } else if (interaction.isChatInputCommand()) {
-        console.log(interaction.command)
+        //this is set up so only apple fan club!! members can use the commands.
+        let allowed_guild = client.guilds.cache.get(process.env.server)
+        let isAllowed
+        try {
+            isAllowed = await allowed_guild.members.fetch(interaction.user.id)
+        } catch (err) {
+            //ignore this, as the member isnt in the guild.
+        }
+
+        if (!isAllowed) {
+            return await interaction.reply({ephemeral: true, content: "sorry, you cant use this bot :3"})
+        }
+
         const command = interaction.client.commands.get(interaction.commandName);
     
         if (!command) {

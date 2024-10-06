@@ -63,14 +63,14 @@ function createComponents() {
 
     const deleter = new ButtonBuilder()
     .setCustomId('delete')
-    .setEmoji('🇽')
+    .setLabel('Delete!')
     .setStyle(ButtonStyle.Danger);
 
     const top_row = new ActionRowBuilder()
-    .addComponents(left, up, down, right);
+    .addComponents(left, up, down, right, wait);
 
     const bottom_row = new ActionRowBuilder()
-    .addComponents(a, b, start, select, wait, deleter);
+    .addComponents(a, b, start, select, deleter);
 
     return [top_row, bottom_row]
 }
@@ -80,7 +80,7 @@ async function updateInteraction(interaction) {
         //the user who used the command initially is the only one who can use the delete button
         if (interaction.customId == "delete") {
             if (interaction.message.interactionMetadata.user.id == interaction.user.id) {
-                return await interaction.message.delete()
+                return await interaction.deleteReply()
             } else {
                 return await interaction.followUp({ephemeral: true, content: "Only the person who used the command can use this!"})
             }
