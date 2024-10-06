@@ -7,6 +7,7 @@ let inputData = {}
 let romName = process.env.romName || './roms/crystal'
 let romExt = process.env.romExt || '.gbc'
 let savExt = process.env.savExt || '.sav'
+let buttonHoldFrames = process.env.buttonHoldFrames || 30
 
 console.log(`loading rom ${romName}${romExt} with save ext ${savExt}`)
 let gameboy = new Gameboy();
@@ -55,14 +56,20 @@ function input(button) {
 }
 
 function advanceFrames(frameCount) {
+    let inputs = inputData
+    inputData = {}
     console.log('advancing')
+    let buttonTimer = buttonHoldFrames
     for (let i = 0; i < frameCount; i++){
-        for (let pressed in inputData) {
+        for (let pressed in inputs) {
             gameboy.pressKey(Gameboy.KEYMAP[pressed])
+        }
+        buttonTimer --
+        if (buttonTimer <= 0) {
+            inputs = {}
         }
         gameboy.doFrame();
     }
-    inputData = {}
 }
 
 
