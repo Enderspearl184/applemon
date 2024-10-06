@@ -14,7 +14,6 @@ function createAttachmentsAndEmbed() {
     return { embed, attachment }
 }
 
-//remember emoji stuff is like <:arrow_down:69420>
 function createComponents() {
     const left = new ButtonBuilder()
     .setCustomId('LEFT')
@@ -68,9 +67,9 @@ function createComponents() {
 
     const top_row = new ActionRowBuilder()
     .addComponents(left, up, down, right, wait);
-
+    
     const bottom_row = new ActionRowBuilder()
-    .addComponents(a, b, start, select, deleter);
+    .addComponents(a, b, start, select) //, deleter)
 
     return [top_row, bottom_row]
 }
