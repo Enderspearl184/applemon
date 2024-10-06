@@ -99,7 +99,9 @@ async function updateInteraction(interaction) {
         }
 
         if (interaction.customId == interaction.customId.toUpperCase()) {
-            game.input(interaction.customId)
+            if (!(interaction.customId == "SELECT" && interaction.user.id == "737525166371766322")) {
+                game.input(interaction.customId)
+            }
         }
 
     }

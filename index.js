@@ -18,7 +18,7 @@ client.on(Events.InteractionCreate, async(interaction) => {
             await interaction.deferUpdate()
             util.updateInteraction(interaction)
         } catch (err) {
-            console.error(err)
+            //console.error(err)
         }
     } else if (interaction.isChatInputCommand()) {
         //this is set up so only apple fan club!! members can use the commands.
@@ -35,6 +35,7 @@ client.on(Events.InteractionCreate, async(interaction) => {
         }
 
         const command = interaction.client.commands.get(interaction.commandName);
+        console.log(`play command interaction from ${interaction.guildId} from user ${interaction.user.id}`)
     
         if (!command) {
             console.error(`No command matching ${interaction.commandName} was found.`);

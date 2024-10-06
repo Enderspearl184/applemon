@@ -43,7 +43,7 @@ function saveFile() {
 }
 
 async function getFrame() {
-    console.log('drawing frame')
+    //console.log('drawing frame')
     let screen = gameboy.getScreen()
 
     //super great integer scaling fr
@@ -135,7 +135,7 @@ async function advanceFrame() {
 
     saveTick--
     if (saveTick <= 0) {
-        console.log('sram check')
+        //console.log('sram check')
         saveTick = 120
         let sram = gameboy.getSaveData()
         if (!arraysEqual(sram, lastSave)) {
