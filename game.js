@@ -25,7 +25,7 @@ function saveFile() {
     if (!isSaving) {
         console.log('saving file')
         isSaving=true
-        fs.writeFileSync(romName + savExt, Buffer.from(gameboy.getSaveData()))
+        fs.writeFileSync(romName + savExt, Buffer.from(Uint8Array.from(gameboy.getSaveData())))
         isSaving=false
     }
 }
@@ -55,7 +55,7 @@ function input(button) {
     inputData[button] = true
 }
 
-function advanceFrames(frameCount) {
+async function advanceFrames(frameCount) {
     let inputs = inputData
     inputData = {}
     console.log('advancing')

@@ -90,7 +90,7 @@ async function updateInteraction(interaction) {
         if (interaction.customId == interaction.customId.toUpperCase()) {
             game.input(interaction.customId)
         }
-        game.advanceFrames(120)
+        await game.advanceFrames(120)
     }
     const {embed, attachment} = createAttachmentsAndEmbed()
     const components = createComponents()
