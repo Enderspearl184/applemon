@@ -1,8 +1,8 @@
 import { EmbedBuilder, AttachmentBuilder, ButtonBuilder, ButtonStyle, ActionRowBuilder } from "discord.js"
 import game from "./game.js"
 
-function createAttachmentsAndEmbed() {
-    let frame = game.getFrame()
+async function createAttachmentsAndEmbed() {
+    let frame = await game.getFrame()
     const attachment = new AttachmentBuilder()
     .setName('frame.png')
     .setFile(frame)
@@ -91,7 +91,7 @@ async function updateInteraction(interaction) {
         }
         await game.advanceFrames(120)
     }
-    const {embed, attachment} = createAttachmentsAndEmbed()
+    const {embed, attachment} = await createAttachmentsAndEmbed()
     const components = createComponents()
     await interaction.editReply({
         embeds: [
