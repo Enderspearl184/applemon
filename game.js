@@ -15,7 +15,7 @@ let gameboy = new Gameboy();
 let rom = fs.readFileSync(romName + romExt);
 
 let save
-
+let saveTick = 120 // every 120 doFrame calls we check if sram is different
 
 if (fs.existsSync(romName + savExt)) {
     save = fs.readFileSync(romName + savExt)
@@ -87,9 +87,10 @@ function reset() {
 }
 
 function input(button) {
-    inputData[button] = true
+    inputData[button] = buttonHoldFrames
 }
 
+/*
 async function advanceFrames(frameCount) {
     let inputs = inputData
     inputData = {}
@@ -112,7 +113,36 @@ async function advanceFrames(frameCount) {
         saveFile()
     }
 }
+*/
 
+async function advanceFrame() {
+    //anti soft reset
+    if (inputData["A"] && inputData["B"] && inputData["START"] && inputData["SELECT"]) {
+        console.log('prevented soft reset!')
+        inputData["A"] = 0
+        inputData["B"] = 0
+        inputData["START"] = 0
+        inputData["SELECT"] = 0
+    }
+
+    for (let button in inputData) {
+        if (inputData[button] > 0) {
+            inputData[button]--
+            gameboy.pressKey(Gameboy.KEYMAP[button])
+        }
+    }
+    gameboy.doFrame()
+
+    saveTick--
+    if (saveTick <= 0) {
+        console.log('sram check')
+        saveTick = 120
+        let sram = gameboy.getSaveData()
+        if (!arraysEqual(sram, lastSave)) {
+            saveFile()
+        }
+    }
+}
 
 process.on("SIGINT", function() {
     console.log("saving before shutdown");
@@ -123,4 +153,7 @@ process.on("exit", function() {
     saveFile()
 });
 
-export default { advanceFrames, saveFile, input, reset, getFrame }
+//run by default.
+setInterval(advanceFrame, 1000/120)
+
+export default { saveFile, input, reset, getFrame }

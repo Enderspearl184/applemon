@@ -69,9 +69,21 @@ function createComponents() {
     .addComponents(left, up, down, right, wait);
     
     const bottom_row = new ActionRowBuilder()
-    .addComponents(a, b, start, select) //, deleter)
+    .addComponents(a, b, start, select, deleter)
 
     return [top_row, bottom_row]
+}
+
+async function handleInteractionEmbed(interaction) {
+    const {embed, attachment} = await createAttachmentsAndEmbed()
+    const components = createComponents()
+    await interaction.editReply({
+        embeds: [
+            embed
+        ],
+        files: [attachment],
+        components
+    })
 }
 
 async function updateInteraction(interaction) {
@@ -89,17 +101,14 @@ async function updateInteraction(interaction) {
         if (interaction.customId == interaction.customId.toUpperCase()) {
             game.input(interaction.customId)
         }
-        await game.advanceFrames(120)
+
     }
-    const {embed, attachment} = await createAttachmentsAndEmbed()
-    const components = createComponents()
-    await interaction.editReply({
-        embeds: [
-            embed
-        ],
-        files: [attachment],
-        components
-    })
+    //send current frame after 1s unless its the refresh button in which case just send it instantly
+    if (interaction.customId == "wait") {
+        handleInteractionEmbed(interaction)
+    } else {
+        setTimeout(async()=>{handleInteractionEmbed(interaction)}, 1000)
+    }
 }
 
 export default { createAttachmentsAndEmbed, createComponents, updateInteraction }
