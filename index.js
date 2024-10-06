@@ -16,7 +16,6 @@ client.on(Events.InteractionCreate, async(interaction) => {
     if (interaction.isMessageComponent()) {
         try {
             await interaction.deferUpdate()
-
             util.updateInteraction(interaction)
         } catch (err) {
             console.error(err)

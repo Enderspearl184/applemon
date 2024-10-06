@@ -61,17 +61,32 @@ function createComponents() {
     .setEmoji('🔄')
     .setStyle(ButtonStyle.Secondary);
 
+    const deleter = new ButtonBuilder()
+    .setCustomId('delete')
+    .setEmoji('🇽')
+    .setStyle(ButtonStyle.Danger);
+
     const top_row = new ActionRowBuilder()
     .addComponents(left, up, down, right);
 
     const bottom_row = new ActionRowBuilder()
-    .addComponents(a, b, start, select, wait);
+    .addComponents(a, b, start, select, wait, deleter);
 
     return [top_row, bottom_row]
 }
 
 async function updateInteraction(interaction) {
     if (interaction.isMessageComponent()) {
+        //the user who used the command initially is the only one who can use the delete button
+        if (interaction.customId == "delete") {
+            if (interaction.message.interactionMetadata.user.id == interaction.user.id) {
+                return await interaction.message.delete()
+            } else {
+                return await interaction.followUp({ephemeral: true, content: "Only the person who used the command can use this!"})
+            }
+
+        }
+
         if (interaction.customId == interaction.customId.toUpperCase()) {
             game.input(interaction.customId)
         }
