@@ -51,13 +51,13 @@ async function getFrame() {
     let index = 0
     for (let i = 0; i < 144; i++) {
         for (let j = 0; j < 160; j++) {
-            index+=4
             for (let k = 0; k < 3; k++) {
                 resizedRow.push(screen[index])
                 resizedRow.push(screen[index+1])
                 resizedRow.push(screen[index+2])
                 resizedRow.push(screen[index+3])
             }
+            index+=4
         }
         for (let k = 0; k < 3; k++) {
             resizedArr = resizedArr.concat(resizedRow)
