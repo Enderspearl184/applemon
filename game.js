@@ -42,6 +42,16 @@ async function saveFile() {
     }
 }
 
+function saveFileSync() {
+    if (!isSaving) {
+        console.log('saving file')
+        isSaving=true
+        lastSave = gameboy.getSaveData()
+        fs.writeFileSync(romName + savExt, Buffer.from(lastSave))
+        isSaving=false
+    }
+}
+
 async function getFrame() {
     //console.log('drawing frame')
     let screen = gameboy.getScreen()
@@ -136,7 +146,7 @@ process.on("SIGINT", function() {
 });
 
 process.on("exit", function() {
-    saveFile()
+    saveFileSync()
 });
 
 //run by default.
