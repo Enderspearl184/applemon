@@ -1,6 +1,6 @@
 import Gameboy from "serverboy"
 import fs from "fs"
-import { PNG } from 'pngjs';
+import sharp from "sharp"
 
 const scaleFactor = 3
 let inputData = {}
@@ -32,12 +32,12 @@ function arraysEqual(a, b) {
 gameboy.loadRom(rom,save);
 
 let isSaving=false
-function saveFile() {
+async function saveFile() {
     if (!isSaving) {
         console.log('saving file')
         isSaving=true
         lastSave = gameboy.getSaveData()
-        fs.writeFileSync(romName + savExt, Buffer.from(lastSave))
+        await fs.promises.writeFile(romName + savExt, Buffer.from(lastSave))
         isSaving=false
     }
 }
@@ -46,34 +46,20 @@ async function getFrame() {
     //console.log('drawing frame')
     let screen = gameboy.getScreen()
 
-    //super great integer scaling fr
-    let resizedArr = []
-    let resizedRow = []
-    let index = 0
-    for (let i = 0; i < 144; i++) {
-        for (let j = 0; j < 160; j++) {
-            for (let k = 0; k < scaleFactor; k++) {
-                resizedRow.push(screen[index])
-                resizedRow.push(screen[index+1])
-                resizedRow.push(screen[index+2])
-                resizedRow.push(screen[index+3])
-            }
-            index+=4
+    return await sharp(Uint8Array.from(screen), {
+        raw: {
+            width: 160,
+            height: 144,
+            channels: 4
         }
-        for (let k = 0; k < scaleFactor; k++) {
-            resizedArr = resizedArr.concat(resizedRow)
-        }
-        resizedRow = []
-    }
-
-    var png = new PNG({ width: 160 * scaleFactor, height: 144 * scaleFactor});
-    for (let i=0; i<resizedArr.length; i++) {
-       png.data[i] = resizedArr[i];
-    }
-    
-    let buf = PNG.sync.write(png);
-
-    return buf
+    })
+    .resize({
+        width: 160 * scaleFactor,
+        height: 144 * scaleFactor,
+        kernel: "nearest"
+    })
+    .png()
+    .toBuffer()
 }
 
 function reset() {
