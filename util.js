@@ -83,7 +83,7 @@ async function handleInteractionEmbed(interaction) {
         ],
         files: [attachment],
         components
-    })
+    }).catch((err)=>{console.error(err)})
 }
 
 async function updateInteraction(interaction) {
@@ -91,9 +91,9 @@ async function updateInteraction(interaction) {
         //the user who used the command initially is the only one who can use the delete button
         if (interaction.customId == "delete") {
             if (interaction.message.interactionMetadata.user.id == interaction.user.id) {
-                return await interaction.deleteReply()
+                return await interaction.deleteReply().catch((err)=>{console.error(err)})
             } else {
-                return await interaction.followUp({ephemeral: true, content: "Only the person who used the command can use this!"})
+                return await interaction.followUp({ephemeral: true, content: "Only the person who used the command can use this!"}).catch((err)=>{console.error(err)})
             }
 
         }
