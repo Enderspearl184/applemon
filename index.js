@@ -22,10 +22,10 @@ client.on(Events.InteractionCreate, async(interaction) => {
         }
     } else if (interaction.isChatInputCommand()) {
         //this is set up so only apple fan club!! members can use the commands.
-        let allowed_guild = client.guilds.cache.get(process.env.server)
+        let allowedGuild = client.guilds.cache.get(process.env.server)
         let isAllowed
         try {
-            isAllowed = await allowed_guild.members.fetch(interaction.user.id)
+            isAllowed = await allowedGuild.members.fetch(interaction.user.id)
         } catch (err) {
             //ignore this, as the member isnt in the guild.
         }
