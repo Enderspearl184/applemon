@@ -1,148 +1,94 @@
-import Gameboy from "serverboy"
 import fs from "fs"
 import { PNG } from 'pngjs';
-
+import {start, GameBoyJoyPadEvent, saveSRAM, saveRTC} from "./emulator/GameBoyIO.js"
+import { createCanvas } from "canvas"
 const scaleFactor = 3
 let inputData = {}
 
 let romName = process.env.romName || './roms/crystal'
 let romExt = process.env.romExt || '.gbc'
 let savExt = process.env.savExt || '.sav'
-let buttonHoldFrames = process.env.buttonHoldFrames || 30
+let buttonHoldFrames = process.env.buttonHoldFrames || 15
 
 console.log(`loading rom ${romName}${romExt} with save ext ${savExt}`)
-let gameboy = new Gameboy();
+
 let rom = fs.readFileSync(romName + romExt);
+let romArrayBuf = new Uint8Array(rom.buffer.slice(rom.byteOffset, rom.byteOffset + rom.byteLength))
+
+let canvas = createCanvas(160, 144)
+let scaleCanvas = createCanvas(160 * scaleFactor, 144 * scaleFactor)
+let scaleContext = scaleCanvas.getContext('2d')
+scaleContext.imageSmoothingEnabled = false
+scaleContext.scale(scaleFactor, scaleFactor)
 
 let save
-let saveTick = 120 // every 120 doFrame calls we check if sram is different
 
 if (fs.existsSync(romName + savExt)) {
     save = fs.readFileSync(romName + savExt)
+    save = new Uint8Array(save.buffer.slice(save.byteOffset, save.byteOffset + save.byteLength))
 }
 
+
+//start the gameboy
+start(canvas, romArrayBuf, save, [])
+
 let lastSave = []
-function arraysEqual(a, b) {
+async function arraysEqual(a, b) {
     for (var i = 0; i < a.length; ++i) {
-      if (a[i] !== b[i]) return false;
+        if (a[i] !== b[i]) return false;
     }
     return true;
-  }
-
-gameboy.loadRom(rom,save);
+}
 
 let isSaving=false
-function saveFile() {
+async function saveFile() {
     if (!isSaving) {
         console.log('saving file')
         isSaving=true
-        lastSave = gameboy.getSaveData()
-        fs.writeFileSync(romName + savExt, Buffer.from(lastSave))
+        lastSave = saveSRAM()
+        await fs.promises.writeFile(romName + savExt, Buffer.from(lastSave))
+        await fs.promises.writeFile(romName + '.rtc.json', JSON.stringify(saveRTC()))
         isSaving=false
     }
 }
 
 async function getFrame() {
-    //console.log('drawing frame')
-    let screen = gameboy.getScreen()
-
-    //super great integer scaling fr
-    let resizedArr = []
-    let resizedRow = []
-    let index = 0
-    for (let i = 0; i < 144; i++) {
-        for (let j = 0; j < 160; j++) {
-            for (let k = 0; k < scaleFactor; k++) {
-                resizedRow.push(screen[index])
-                resizedRow.push(screen[index+1])
-                resizedRow.push(screen[index+2])
-                resizedRow.push(screen[index+3])
-            }
-            index+=4
-        }
-        for (let k = 0; k < scaleFactor; k++) {
-            resizedArr = resizedArr.concat(resizedRow)
-        }
-        resizedRow = []
-    }
-
-    var png = new PNG({ width: 160 * scaleFactor, height: 144 * scaleFactor});
-    for (let i=0; i<resizedArr.length; i++) {
-       png.data[i] = resizedArr[i];
-    }
-    
-    let buf = PNG.sync.write(png);
-
-    return buf
+    scaleContext.drawImage(canvas, 0, 0)
+    return scaleCanvas.toBuffer('image/png')
 }
 
 function reset() {
     saveFile()
     if (fs.existsSync(romName + savExt)) {
         save = fs.readFileSync(romName + savExt)
+        save = new Uint8Array(save.buffer.slice(save.byteOffset, save.byteOffset + save.byteLength))
     } else {
         save = undefined
     }
-    gameboy.loadRom(rom,save)
+    
 }
 
 function input(button) {
-    inputData[button] = buttonHoldFrames
+    //don't allow soft resetting.
+    let anti_sr = Object.keys(inputData)
+    anti_sr.push(button)
+    if (anti_sr.includes('A') && anti_sr.includes('B') && anti_sr.includes('START') && anti_sr.includes('SELECT')) {
+        return
+    }
+    console.log(`pressing button ${button}`)
+    clearTimeout(inputData[button])
+    GameBoyJoyPadEvent(button, true)
+    inputData[button] = setTimeout(()=>{
+        console.log(`unpressing button ${button}`)
+        GameBoyJoyPadEvent(button, false)
+    }, 1000/buttonHoldFrames)
 }
 
-/*
-async function advanceFrames(frameCount) {
-    let inputs = inputData
-    inputData = {}
-    console.log(`advancing with buttons: ${Object.keys(inputs).join()}`)
-    let buttonTimer = buttonHoldFrames
-    for (let i = 0; i < frameCount; i++){
-        for (let pressed in inputs) {
-            gameboy.pressKey(Gameboy.KEYMAP[pressed])
-        }
-        buttonTimer --
-        if (buttonTimer <= 0) {
-            inputs = {}
-        }
-        gameboy.doFrame();
-    }
-
-    //check sram
-    let sram = gameboy.getSaveData()
-    if (!arraysEqual(sram, lastSave)) {
+setInterval(async()=>{
+    if (!await arraysEqual(lastSave, saveSRAM())) {
         saveFile()
     }
-}
-*/
-
-async function advanceFrame() {
-    //anti soft reset
-    if (inputData["A"] && inputData["B"] && inputData["START"] && inputData["SELECT"]) {
-        console.log('prevented soft reset!')
-        inputData["A"] = 0
-        inputData["B"] = 0
-        inputData["START"] = 0
-        inputData["SELECT"] = 0
-    }
-
-    for (let button in inputData) {
-        if (inputData[button] > 0) {
-            inputData[button]--
-            gameboy.pressKey(Gameboy.KEYMAP[button])
-        }
-    }
-    gameboy.doFrame()
-
-    saveTick--
-    if (saveTick <= 0) {
-        //console.log('sram check')
-        saveTick = 120
-        let sram = gameboy.getSaveData()
-        if (!arraysEqual(sram, lastSave)) {
-            saveFile()
-        }
-    }
-}
+}, 1000/60)
 
 process.on("SIGINT", function() {
     console.log("saving before shutdown");
@@ -154,6 +100,6 @@ process.on("exit", function() {
 });
 
 //run by default.
-setInterval(advanceFrame, 1000/120)
+//setInterval(advanceFrame, 1000/120)
 
 export default { saveFile, input, reset, getFrame }

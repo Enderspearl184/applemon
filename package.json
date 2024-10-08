@@ -1,6 +1,7 @@
 {
   "dependencies": {
     "@types/pngjs": "^6.0.5",
+    "canvas": "^2.11.2",
     "discord.js": "^14.16.3",
     "dotenv": "^16.4.5",
     "pngjs": "^7.0.0",

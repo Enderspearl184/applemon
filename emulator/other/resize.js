@@ -1,6 +1,4 @@
 //JavaScript Image Resizer (c) 2012 - Grant Galitz
-var scripts = document.getElementsByTagName("script");
-var sourceOfWorker = scripts[scripts.length-1].src;
 function Resize(widthOriginal, heightOriginal, targetWidth, targetHeight, blendAlpha, interpolationPass, useWebWorker, resizeCallback) {
 	this.widthOriginal = Math.abs(parseInt(widthOriginal) || 0);
 	this.heightOriginal = Math.abs(parseInt(heightOriginal) || 0);
@@ -8,7 +6,7 @@ function Resize(widthOriginal, heightOriginal, targetWidth, targetHeight, blendA
 	this.targetHeight = Math.abs(parseInt(targetHeight) || 0);
 	this.colorChannels = (!!blendAlpha) ? 4 : 3;
 	this.interpolationPass = !!interpolationPass;
-	this.useWebWorker = !!useWebWorker;
+	this.useWebWorker = false;
 	this.resizeCallback = (typeof resizeCallback == "function") ? resizeCallback : function (returnedArray) {};
 	this.targetWidthMultipliedByChannels = this.targetWidth * this.colorChannels;
 	this.originalWidthMultipliedByChannels = this.widthOriginal * this.colorChannels;
@@ -20,34 +18,13 @@ function Resize(widthOriginal, heightOriginal, targetWidth, targetHeight, blendA
 Resize.prototype.initialize = function () {
 	//Perform some checks:
 	if (this.widthOriginal > 0 && this.heightOriginal > 0 && this.targetWidth > 0 && this.targetHeight > 0) {
-		if (this.useWebWorker) {
-			this.useWebWorker = (this.widthOriginal != this.targetWidth || this.heightOriginal != this.targetHeight);
-			if (this.useWebWorker) {
-				this.configureWorker();
-			}
-		}
-		if (!this.useWebWorker) {
-			this.configurePasses();
-		}
+		this.configurePasses();
 	}
 	else {
 		throw(new Error("Invalid settings specified for the resizer."));
 	}
 }
-Resize.prototype.configureWorker = function () {
-	try {
-		var parentObj = this;
-		this.worker = new Worker(sourceOfWorker.substring(0, sourceOfWorker.length - 3) + "Worker.js");
-		this.worker.onmessage = function (event) {
-			parentObj.heightBuffer = event.data;
-			parentObj.resizeCallback(parentObj.heightBuffer);
-		}
-		this.worker.postMessage(["setup", this.widthOriginal, this.heightOriginal, this.targetWidth, this.targetHeight, this.colorChannels, this.interpolationPass]);
-	}
-	catch (error) {
-		this.useWebWorker = false;
-	}
-}
+
 Resize.prototype.configurePasses = function () {
 	if (this.widthOriginal == this.targetWidth) {
 		//Bypass the width resizer pass:
@@ -448,3 +425,5 @@ Resize.prototype.generateUint8Buffer = function (bufferLength) {
 		return [];
 	}
 }
+
+export { Resize }

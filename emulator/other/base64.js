@@ -5,7 +5,7 @@ var toBase64 = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M",
 var fromBase64 = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
 function base64(data) {
 	try {
-		var base64 = window.btoa(data);	//Use this native function when it's available, as it's a magnitude faster than the non-native code below.
+		var base64 = btoa(data);	//Use this native function when it's available, as it's a magnitude faster than the non-native code below.
 	}
 	catch (error) {
 		//Defaulting to non-native base64 encoding...
@@ -41,7 +41,7 @@ function base64(data) {
 }
 function base64_decode(data) {
 	try {
-		var decode64 = window.atob(data);	//Use this native function when it's available, as it's a magnitude faster than the non-native code below.
+		var decode64 = atob(data);	//Use this native function when it's available, as it's a magnitude faster than the non-native code below.
 	}
 	catch (error) {
 		//Defaulting to non-native base64 decoding...

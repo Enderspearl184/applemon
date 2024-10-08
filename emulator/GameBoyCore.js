@@ -1,4 +1,7 @@
 "use strict";
+import {settings, pause, initNewCanvas} from "./GameBoyIO.js"
+import { Resize } from "./other/resize.js"
+import "./other/base64.js"
  /*
   JavaScript GameBoy Color Emulator
   Copyright (C) 2010-2016 Grant Galitz
@@ -9,6 +12,7 @@
 
   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 */
+import { createCanvas } from "canvas"
 function GameBoyCore(canvas, ROMImage) {
 	//Params, etc...
 	this.canvas = canvas;						//Canvas DOM object for drawing out the graphics to.
@@ -409,12 +413,12 @@ GameBoyCore.prototype.OPCODE = [
 		if (parentObj.cGBC) {
 			if ((parentObj.memory[0xFF4D] & 0x01) == 0x01) {		//Speed change requested.
 				if (parentObj.memory[0xFF4D] > 0x7F) {				//Go back to single speed mode.
-					cout("Going into single clock speed mode.", 0);
+					//console.log("Going into single clock speed mode.", 0);
 					parentObj.doubleSpeedShifter = 0;
 					parentObj.memory[0xFF4D] &= 0x7F;				//Clear the double speed mode flag.
 				}
 				else {												//Go to double speed mode.
-					cout("Going into double clock speed mode.", 0);
+					//console.log("Going into double clock speed mode.", 0);
 					parentObj.doubleSpeedShifter = 1;
 					parentObj.memory[0xFF4D] |= 0x80;				//Set the double speed mode flag.
 				}
@@ -1889,7 +1893,7 @@ GameBoyCore.prototype.OPCODE = [
 	//0xD3 - Illegal
 	//#0xD3:
 	function (parentObj) {
-		cout("Illegal op code 0xD3 called, pausing emulation.", 2);
+		//console.log("Illegal op code 0xD3 called, pausing emulation.", 2);
 		pause();
 	},
 	//CALL !FC, nn
@@ -1968,7 +1972,7 @@ GameBoyCore.prototype.OPCODE = [
 	//0xDB - Illegal
 	//#0xDB:
 	function (parentObj) {
-		cout("Illegal op code 0xDB called, pausing emulation.", 2);
+		//console.log("Illegal op code 0xDB called, pausing emulation.", 2);
 		pause();
 	},
 	//CALL FC, nn
@@ -1991,7 +1995,7 @@ GameBoyCore.prototype.OPCODE = [
 	//0xDD - Illegal
 	//#0xDD:
 	function (parentObj) {
-		cout("Illegal op code 0xDD called, pausing emulation.", 2);
+		//console.log("Illegal op code 0xDD called, pausing emulation.", 2);
 		pause();
 	},
 	//SBC A, n
@@ -2035,13 +2039,13 @@ GameBoyCore.prototype.OPCODE = [
 	//0xE3 - Illegal
 	//#0xE3:
 	function (parentObj) {
-		cout("Illegal op code 0xE3 called, pausing emulation.", 2);
+		//console.log("Illegal op code 0xE3 called, pausing emulation.", 2);
 		pause();
 	},
 	//0xE4 - Illegal
 	//#0xE4:
 	function (parentObj) {
-		cout("Illegal op code 0xE4 called, pausing emulation.", 2);
+		//console.log("Illegal op code 0xE4 called, pausing emulation.", 2);
 		pause();
 	},
 	//PUSH HL
@@ -2096,19 +2100,19 @@ GameBoyCore.prototype.OPCODE = [
 	//0xEB - Illegal
 	//#0xEB:
 	function (parentObj) {
-		cout("Illegal op code 0xEB called, pausing emulation.", 2);
+		//console.log("Illegal op code 0xEB called, pausing emulation.", 2);
 		pause();
 	},
 	//0xEC - Illegal
 	//#0xEC:
 	function (parentObj) {
-		cout("Illegal op code 0xEC called, pausing emulation.", 2);
+		//console.log("Illegal op code 0xEC called, pausing emulation.", 2);
 		pause();
 	},
 	//0xED - Illegal
 	//#0xED:
 	function (parentObj) {
-		cout("Illegal op code 0xED called, pausing emulation.", 2);
+		//console.log("Illegal op code 0xED called, pausing emulation.", 2);
 		pause();
 	},
 	//XOR n
@@ -2159,7 +2163,7 @@ GameBoyCore.prototype.OPCODE = [
 	//0xF4 - Illegal
 	//#0xF4:
 	function (parentObj) {
-		cout("Illegal op code 0xF4 called, pausing emulation.", 2);
+		//console.log("Illegal op code 0xF4 called, pausing emulation.", 2);
 		pause();
 	},
 	//PUSH AF
@@ -2218,13 +2222,13 @@ GameBoyCore.prototype.OPCODE = [
 	//0xFC - Illegal
 	//#0xFC:
 	function (parentObj) {
-		cout("Illegal op code 0xFC called, pausing emulation.", 2);
+		//console.log("Illegal op code 0xFC called, pausing emulation.", 2);
 		pause();
 	},
 	//0xFD - Illegal
 	//#0xFD:
 	function (parentObj) {
-		cout("Illegal op code 0xFD called, pausing emulation.", 2);
+		//console.log("Illegal op code 0xFD called, pausing emulation.", 2);
 		pause();
 	},
 	//CP n
@@ -3919,6 +3923,7 @@ GameBoyCore.prototype.SecondaryTICKTable = [	//Number of machine cycles for each
 GameBoyCore.prototype.saveSRAMState = function () {
 	if (!this.cBATT || this.MBCRam.length == 0) {
 		//No battery backup...
+		console.log('no sram')
 		return [];
 	}
 	else {
@@ -3933,6 +3938,23 @@ GameBoyCore.prototype.saveRTCState = function () {
 	}
 	else {
 		//Return the MBC RAM for backup...
+		/*
+		[
+  1728359709551,
+  false,
+  0,
+  undefined,
+  undefined,
+  0,
+  0,
+  0.25500000000000006,
+  0,
+  0,
+  0,
+  false,
+  undefined
+]
+  */
 		return [
 			this.lastIteration,
 			this.RTCisLatched,
@@ -4385,8 +4407,8 @@ GameBoyCore.prototype.returnFromState = function (returnedFrom) {
 	this.channel4VolumeShifter = (this.channel4BitRange == 0x7FFF) ? 15 : 7;
 }
 GameBoyCore.prototype.returnFromRTCState = function () {
-	if (typeof this.openRTC == "function" && this.cTIMER) {
-		var rtcData = this.openRTC(this.name);
+	if (this.openRTC && this.cTIMER) {
+		var rtcData = this.openRTC
 		var index = 0;
 		this.lastIteration = rtcData[index++];
 		this.RTCisLatched = rtcData[index++];
@@ -4463,7 +4485,7 @@ GameBoyCore.prototype.initSkipBootstrap = function () {
 		this.memory[0xFF74] = 0xFF;
 	}
 	//Start as an unset device:
-	cout("Starting without the GBC boot ROM.", 0);
+	//console.log("Starting without the GBC boot ROM.", 0);
 	this.registerA = (this.cGBC) ? 0x11 : 0x1;
 	this.registerB = 0;
 	this.registerC = 0x13;
@@ -4576,7 +4598,7 @@ GameBoyCore.prototype.initSkipBootstrap = function () {
 }
 GameBoyCore.prototype.initBootstrap = function () {
 	//Start as an unset device:
-	cout("Starting the selected boot ROM.", 0);
+	//console.log("Starting the selected boot ROM.", 0);
 	this.programCounter = 0;
 	this.stackPointer = 0;
 	this.IME = false;
@@ -4618,14 +4640,14 @@ GameBoyCore.prototype.ROMLoad = function () {
 			//Patch in the GBC boot ROM into the memory map:
 			for (; romIndex < 0x100; ++romIndex) {
 				this.memory[romIndex] = this.GBCBOOTROM[romIndex];											//Load in the GameBoy Color BOOT ROM.
-				this.ROM[romIndex] = (this.ROMImage.charCodeAt(romIndex) & 0xFF);							//Decode the ROM binary for the switch out.
+				this.ROM[romIndex] = (this.ROMImage[romIndex] & 0xFF);							//Decode the ROM binary for the switch out.
 			}
 			for (; romIndex < 0x200; ++romIndex) {
-				this.memory[romIndex] = this.ROM[romIndex] = (this.ROMImage.charCodeAt(romIndex) & 0xFF);	//Load in the game ROM.
+				this.memory[romIndex] = this.ROM[romIndex] = (this.ROMImage[romIndex] & 0xFF);	//Load in the game ROM.
 			}
 			for (; romIndex < 0x900; ++romIndex) {
 				this.memory[romIndex] = this.GBCBOOTROM[romIndex - 0x100];									//Load in the GameBoy Color BOOT ROM.
-				this.ROM[romIndex] = (this.ROMImage.charCodeAt(romIndex) & 0xFF);							//Decode the ROM binary for the switch out.
+				this.ROM[romIndex] = (this.ROMImage[romIndex] & 0xFF);							//Decode the ROM binary for the switch out.
 			}
 			this.usedGBCBootROM = true;
 		}
@@ -4633,22 +4655,22 @@ GameBoyCore.prototype.ROMLoad = function () {
 			//Patch in the GBC boot ROM into the memory map:
 			for (; romIndex < 0x100; ++romIndex) {
 				this.memory[romIndex] = this.GBBOOTROM[romIndex];											//Load in the GameBoy Color BOOT ROM.
-				this.ROM[romIndex] = (this.ROMImage.charCodeAt(romIndex) & 0xFF);							//Decode the ROM binary for the switch out.
+				this.ROM[romIndex] = (this.ROMImage[romIndex] & 0xFF);							//Decode the ROM binary for the switch out.
 			}
 		}
 		for (; romIndex < 0x4000; ++romIndex) {
-			this.memory[romIndex] = this.ROM[romIndex] = (this.ROMImage.charCodeAt(romIndex) & 0xFF);	//Load in the game ROM.
+			this.memory[romIndex] = this.ROM[romIndex] = (this.ROMImage[romIndex] & 0xFF);	//Load in the game ROM.
 		}
 	}
 	else {
 		//Don't load in the boot ROM:
 		for (; romIndex < 0x4000; ++romIndex) {
-			this.memory[romIndex] = this.ROM[romIndex] = (this.ROMImage.charCodeAt(romIndex) & 0xFF);	//Load in the game ROM.
+			this.memory[romIndex] = this.ROM[romIndex] = (this.ROMImage[romIndex] & 0xFF);	//Load in the game ROM.
 		}
 	}
 	//Finish the decoding of the ROM binary:
 	for (; romIndex < maxLength; ++romIndex) {
-		this.ROM[romIndex] = (this.ROMImage.charCodeAt(romIndex) & 0xFF);
+		this.ROM[romIndex] = (this.ROMImage[romIndex] & 0xFF);
 	}
 	this.ROMBankEdge = Math.floor(this.ROM.length / 0x4000);
 	//Set up the emulator for the cartidge specifics:
@@ -4670,21 +4692,21 @@ GameBoyCore.prototype.getROMImage = function () {
 GameBoyCore.prototype.interpretCartridge = function () {
 	// ROM name
 	for (var index = 0x134; index < 0x13F; index++) {
-		if (this.ROMImage.charCodeAt(index) > 0) {
+		if (this.ROMImage[index] > 0) {
 			this.name += this.ROMImage[index];
 		}
 	}
 	// ROM game code (for newer games)
 	for (var index = 0x13F; index < 0x143; index++) {
-		if (this.ROMImage.charCodeAt(index) > 0) {
+		if (this.ROMImage[index] > 0) {
 			this.gameCode += this.ROMImage[index];
 		}
 	}
-	cout("Game Title: " + this.name + "[" + this.gameCode + "][" + this.ROMImage[0x143] + "]", 0);
-	cout("Game Code: " + this.gameCode, 0);
+	//console.log("Game Title: " + this.name + "[" + this.gameCode + "][" + this.ROMImage[0x143] + "]", 0);
+	//console.log("Game Code: " + this.gameCode, 0);
 	// Cartridge type
 	this.cartridgeType = this.ROM[0x147];
-	cout("Cartridge type #" + this.cartridgeType, 0);
+	//console.log("Cartridge type #" + this.cartridgeType, 0);
 	//Map out ROM cartridge sub-types.
 	var MBCType = "";
 	switch (this.cartridgeType) {
@@ -4824,40 +4846,40 @@ GameBoyCore.prototype.interpretCartridge = function () {
 			break;
 		default:
 			MBCType = "Unknown";
-			cout("Cartridge type is unknown.", 2);
+			//console.log("Cartridge type is unknown.", 2);
 			pause();
 	}
-	cout("Cartridge Type: " + MBCType + ".", 0);
+	//console.log("Cartridge Type: " + MBCType + ".", 0);
 	// ROM and RAM banks
 	this.numROMBanks = this.ROMBanks[this.ROM[0x148]];
-	cout(this.numROMBanks + " ROM banks.", 0);
+	//console.log(this.numROMBanks + " ROM banks.", 0);
 	switch (this.RAMBanks[this.ROM[0x149]]) {
 		case 0:
-			cout("No RAM banking requested for allocation or MBC is of type 2.", 0);
+			//console.log("No RAM banking requested for allocation or MBC is of type 2.", 0);
 			break;
 		case 2:
-			cout("1 RAM bank requested for allocation.", 0);
+			//console.log("1 RAM bank requested for allocation.", 0);
 			break;
 		case 3:
-			cout("4 RAM banks requested for allocation.", 0);
+			//console.log("4 RAM banks requested for allocation.", 0);
 			break;
 		case 4:
-			cout("16 RAM banks requested for allocation.", 0);
+			//console.log("16 RAM banks requested for allocation.", 0);
 			break;
 		default:
-			cout("RAM bank amount requested is unknown, will use maximum allowed by specified MBC type.", 0);
+			//console.log("RAM bank amount requested is unknown, will use maximum allowed by specified MBC type.", 0);
 	}
 	//Check the GB/GBC mode byte:
 	if (!this.usedBootROM) {
 		switch (this.ROM[0x143]) {
 			case 0x00:	//Only GB mode
 				this.cGBC = false;
-				cout("Only GB mode detected.", 0);
+				//console.log("Only GB mode detected.", 0);
 				break;
 			case 0x32:	//Exception to the GBC identifying code:
 				if (!settings[2] && this.name + this.gameCode + this.ROM[0x143] == "Game and Watch 50") {
 					this.cGBC = true;
-					cout("Created a boot exception for Game and Watch Gallery 2 (GBC ID byte is wrong on the cartridge).", 1);
+					//console.log("Created a boot exception for Game and Watch Gallery 2 (GBC ID byte is wrong on the cartridge).", 1);
 				}
 				else {
 					this.cGBC = false;
@@ -4865,15 +4887,15 @@ GameBoyCore.prototype.interpretCartridge = function () {
 				break;
 			case 0x80:	//Both GB + GBC modes
 				this.cGBC = !settings[2];
-				cout("GB and GBC mode detected.", 0);
+				//console.log("GB and GBC mode detected.", 0);
 				break;
 			case 0xC0:	//Only GBC mode
 				this.cGBC = true;
-				cout("Only GBC mode detected.", 0);
+				//console.log("Only GBC mode detected.", 0);
 				break;
 			default:
 				this.cGBC = false;
-				cout("Unknown GameBoy game type code #" + this.ROM[0x143] + ", defaulting to GB mode (Old games don't have a type code).", 1);
+				//console.log("Unknown GameBoy game type code #" + this.ROM[0x143] + ", defaulting to GB mode (Old games don't have a type code).", 1);
 		}
 		this.inBootstrap = false;
 		this.setupRAM();	//CPU/(V)RAM initialization.
@@ -4890,11 +4912,11 @@ GameBoyCore.prototype.interpretCartridge = function () {
 	var cNewLicense = (this.ROM[0x144] & 0xFF00) | (this.ROM[0x145] & 0xFF);
 	if (cOldLicense != 0x33) {
 		//Old Style License Header
-		cout("Old style license code: " + cOldLicense, 0);
+		//console.log("Old style license code: " + cOldLicense, 0);
 	}
 	else {
 		//New Style License Header
-		cout("New style license code: " + cNewLicense, 0);
+		//console.log("New style license code: " + cNewLicense, 0);
 	}
 	this.ROMImage = "";	//Memory consumption reduction.
 }
@@ -4955,7 +4977,7 @@ GameBoyCore.prototype.setupRAM = function () {
 			this.MBCRAMBanksEnabled = true;
 		}
 		//Switched RAM Used
-		var MBCRam = (typeof this.openMBC == "function") ? this.openMBC(this.name) : [];
+		var MBCRam = this.openMBC
 		if (MBCRam.length > 0) {
 			//Flash the SRAM into memory:
 			this.MBCRam = this.toTypedArray(MBCRam, "uint8");
@@ -4964,7 +4986,7 @@ GameBoyCore.prototype.setupRAM = function () {
 			this.MBCRam = this.getTypedArray(this.numRAMBanks * 0x2000, 0, "uint8");
 		}
 	}
-	cout("Actual bytes of MBC RAM allocated: " + (this.numRAMBanks * 0x2000), 0);
+	//console.log("Actual bytes of MBC RAM allocated: " + (this.numRAMBanks * 0x2000), 0);
 	this.returnFromRTCState();
 	//Setup the RAM for GBC mode.
 	if (this.cGBC) {
@@ -4982,15 +5004,15 @@ GameBoyCore.prototype.recomputeDimension = function () {
 	//Cache some dimension info:
 	this.onscreenWidth = this.canvas.width;
 	this.onscreenHeight = this.canvas.height;
-	if (window && window.mozRequestAnimationFrame || (navigator.userAgent.toLowerCase().indexOf("gecko") != -1 && navigator.userAgent.toLowerCase().indexOf("like gecko") == -1)) {
-		//Firefox slowness hack:
-		this.canvas.width = this.onscreenWidth = (!settings[12]) ? 160 : this.canvas.width;
-		this.canvas.height = this.onscreenHeight = (!settings[12]) ? 144 : this.canvas.height;
-	}
-	else {
+	//if (window && window.mozRequestAnimationFrame || (navigator.userAgent.toLowerCase().indexOf("gecko") != -1 && navigator.userAgent.toLowerCase().indexOf("like gecko") == -1)) {
+	//	//Firefox slowness hack:
+	//	this.canvas.width = this.onscreenWidth = (!settings[12]) ? 160 : this.canvas.width;
+	//	this.canvas.height = this.onscreenHeight = (!settings[12]) ? 144 : this.canvas.height;
+	//}
+	//else {
 		this.onscreenWidth = this.canvas.width;
 		this.onscreenHeight = this.canvas.height;
-	}
+	//}
 	this.offscreenWidth = (!settings[12]) ? 160 : this.canvas.width;
 	this.offscreenHeight = (!settings[12]) ? 144 : this.canvas.height;
 	this.offscreenRGBCount = this.offscreenWidth * this.offscreenHeight * 4;
@@ -5006,15 +5028,15 @@ GameBoyCore.prototype.initLCD = function () {
 		this.resizer = null;
 	}
 	try {
-		this.canvasOffscreen = document.createElement("canvas");
+		this.canvasOffscreen = createCanvas()
 		this.canvasOffscreen.width = this.offscreenWidth;
 		this.canvasOffscreen.height = this.offscreenHeight;
 		this.drawContextOffscreen = this.canvasOffscreen.getContext("2d");
 		this.drawContextOnscreen = this.canvas.getContext("2d");
-		this.canvas.setAttribute("style", (this.canvas.getAttribute("style") || "") + "; image-rendering: " + ((settings[13]) ? "auto" : "-webkit-optimize-contrast") + ";" +
-		"image-rendering: " + ((settings[13]) ? "optimizeQuality" : "-o-crisp-edges") + ";" +
-		"image-rendering: " + ((settings[13]) ? "optimizeQuality" : "-moz-crisp-edges") + ";" +
-		"-ms-interpolation-mode: " + ((settings[13]) ? "bicubic" : "nearest-neighbor") + ";");
+		//this.canvas.setAttribute("style", (this.canvas.getAttribute("style") || "") + "; image-rendering: " + ((settings[13]) ? "auto" : "-webkit-optimize-contrast") + ";" +
+		//"image-rendering: " + ((settings[13]) ? "optimizeQuality" : "-o-crisp-edges") + ";" +
+		//"image-rendering: " + ((settings[13]) ? "optimizeQuality" : "-moz-crisp-edges") + ";" +
+		//"-ms-interpolation-mode: " + ((settings[13]) ? "bicubic" : "nearest-neighbor") + ";");
 		this.drawContextOffscreen.webkitImageSmoothingEnabled  = settings[13];
 		this.drawContextOffscreen.mozImageSmoothingEnabled = settings[13];
 		this.drawContextOnscreen.webkitImageSmoothingEnabled  = settings[13];
@@ -5024,7 +5046,7 @@ GameBoyCore.prototype.initLCD = function () {
 			this.canvasBuffer = this.drawContextOffscreen.createImageData(this.offscreenWidth, this.offscreenHeight);
 		}
 		catch (error) {
-			cout("Falling back to the getImageData initialization (Error \"" + error.message + "\").", 1);
+			//console.log("Falling back to the getImageData initialization (Error \"" + error.message + "\").", 1);
 			this.canvasBuffer = this.drawContextOffscreen.getImageData(0, 0, this.offscreenWidth, this.offscreenHeight);
 		}
 		var index = this.offscreenRGBCount;
@@ -5035,7 +5057,7 @@ GameBoyCore.prototype.initLCD = function () {
 			this.canvasBuffer.data[index + 3] = 0xFF;
 		}
 		this.graphicsBlit();
-		this.canvas.style.visibility = "visible";
+		//Zthis.canvas.style.visibility = "visible";
 		if (this.swizzledFrame == null) {
 			this.swizzledFrame = this.getTypedArray(69120, 0xFF, "uint8");
 		}
@@ -5086,7 +5108,7 @@ GameBoyCore.prototype.initSound = function () {
 	this.downSampleInputDivider = 1 / (this.audioResamplerFirstPassFactor * 0xF0);
 	if (settings[0]) {
 		this.audioHandle = new XAudioServer(2, this.clocksPerSecond / this.audioResamplerFirstPassFactor, 0, Math.max(this.baseCPUCyclesPerIteration * settings[8] / this.audioResamplerFirstPassFactor, 8192) << 1, null, settings[3], function () {
-			settings[0] = false;
+		settings[0] = false;
 		});
 		this.initAudioBuffer();
 	}
@@ -5744,7 +5766,7 @@ GameBoyCore.prototype.run = function () {
 			}
 		}
 		else {		//We can only get here if there was an internal error, but the loop was restarted.
-			cout("Iterator restarted a faulted core.", 2);
+			//console.log("Iterator restarted a faulted core.", 2);
 			pause();
 		}
 	}
@@ -6229,6 +6251,7 @@ GameBoyCore.prototype.prepareFrame = function () {
 	this.swizzleFrameBuffer();
 	this.drewFrame = true;
 }
+
 GameBoyCore.prototype.requestDraw = function () {
 	if (this.drewFrame) {
 		this.dispatchDraw();
@@ -6369,7 +6392,7 @@ GameBoyCore.prototype.initializeModeSpecificArrays = function () {
 	this.renderPathBuild();
 }
 GameBoyCore.prototype.GBCtoGBModeAdjust = function () {
-	cout("Stepping down from GBC mode.", 0);
+	//console.log("Stepping down from GBC mode.", 0);
 	this.VRAM = this.GBCMemory = this.BGCHRCurrentBank = this.BGCHRBank2 = null;
 	this.tileCache.length = 0x700;
 	if (settings[4]) {
@@ -7958,7 +7981,7 @@ GameBoyCore.prototype.memoryReadMBC = function (parentObj, address) {
 	if (parentObj.MBCRAMBanksEnabled || settings[10]) {
 		return parentObj.MBCRam[address + parentObj.currMBCRAMBankPosition];
 	}
-	//cout("Reading from disabled RAM.", 1);
+	////console.log("Reading from disabled RAM.", 1);
 	return 0xFF;
 }
 GameBoyCore.prototype.memoryReadMBC7 = function (parentObj, address) {
@@ -7988,7 +8011,7 @@ GameBoyCore.prototype.memoryReadMBC7 = function (parentObj, address) {
 				return parentObj.MBCRam[address + parentObj.currMBCRAMBankPosition];
 		}
 	}
-	//cout("Reading from disabled RAM.", 1);
+	////console.log("Reading from disabled RAM.", 1);
 	return 0xFF;
 }
 GameBoyCore.prototype.memoryReadMBC3 = function (parentObj, address) {
@@ -8017,7 +8040,7 @@ GameBoyCore.prototype.memoryReadMBC3 = function (parentObj, address) {
 				return (((parentObj.RTCDayOverFlow) ? 0x80 : 0) + ((parentObj.RTCHALT) ? 0x40 : 0)) + parentObj.latchedHDays;
 		}
 	}
-	//cout("Reading from invalid or disabled RAM.", 1);
+	////console.log("Reading from invalid or disabled RAM.", 1);
 	return 0xFF;
 }
 GameBoyCore.prototype.memoryReadGBCMemory = function (parentObj, address) {
@@ -8339,7 +8362,7 @@ GameBoyCore.prototype.memoryWriteMBC3RAM = function (parentObj, address, data) {
 					parentObj.RTCSeconds = data;
 				}
 				else {
-					cout("(Bank #" + parentObj.currMBCRAMBank + ") RTC write out of range: " + data, 1);
+					//console.log("(Bank #" + parentObj.currMBCRAMBank + ") RTC write out of range: " + data, 1);
 				}
 				break;
 			case 0x09:
@@ -8347,7 +8370,7 @@ GameBoyCore.prototype.memoryWriteMBC3RAM = function (parentObj, address, data) {
 					parentObj.RTCMinutes = data;
 				}
 				else {
-					cout("(Bank #" + parentObj.currMBCRAMBank + ") RTC write out of range: " + data, 1);
+					//console.log("(Bank #" + parentObj.currMBCRAMBank + ") RTC write out of range: " + data, 1);
 				}
 				break;
 			case 0x0A:
@@ -8355,7 +8378,7 @@ GameBoyCore.prototype.memoryWriteMBC3RAM = function (parentObj, address, data) {
 					parentObj.RTCHours = data;
 				}
 				else {
-					cout("(Bank #" + parentObj.currMBCRAMBank + ") RTC write out of range: " + data, 1);
+					//console.log("(Bank #" + parentObj.currMBCRAMBank + ") RTC write out of range: " + data, 1);
 				}
 				break;
 			case 0x0B:
@@ -8367,7 +8390,7 @@ GameBoyCore.prototype.memoryWriteMBC3RAM = function (parentObj, address, data) {
 				parentObj.RTCDays = ((data & 0x1) << 8) | (parentObj.RTCDays & 0xFF);
 				break;
 			default:
-				cout("Invalid MBC3 bank address selected: " + parentObj.currMBCRAMBank, 0);
+				//console.log("Invalid MBC3 bank address selected: " + parentObj.currMBCRAMBank, 0);
 		}
 	}
 }
@@ -9422,7 +9445,7 @@ GameBoyCore.prototype.recompileBootIOWriteHandling = function () {
 	//Boot I/O Registers:
 	if (this.inBootstrap) {
 		this.memoryHighWriter[0x50] = this.memoryWriter[0xFF50] = function (parentObj, address, data) {
-			cout("Boot ROM reads blocked: Bootstrap process has ended.", 0);
+			//console.log("Boot ROM reads blocked: Bootstrap process has ended.", 0);
 			parentObj.inBootstrap = false;
 			parentObj.disableBootROM();			//Fill in the boot ROM ranges with ROM  bank 0 ROM ranges
 			parentObj.memory[0xFF50] = data;	//Bits are sustained in memory?
@@ -9434,9 +9457,9 @@ GameBoyCore.prototype.recompileBootIOWriteHandling = function () {
 					//Exception to the GBC identifying code:
 					if (parentObj.name + parentObj.gameCode + parentObj.ROM[0x143] == "Game and Watch 50") {
 						parentObj.cGBC = true;
-						cout("Created a boot exception for Game and Watch Gallery 2 (GBC ID byte is wrong on the cartridge).", 1);
+						//console.log("Created a boot exception for Game and Watch Gallery 2 (GBC ID byte is wrong on the cartridge).", 1);
 					}
-					cout("Booted to GBC Mode: " + parentObj.cGBC, 0);
+					//console.log("Booted to GBC Mode: " + parentObj.cGBC, 0);
 				}
 				parentObj.memory[0xFF6C] = data;
 			}
@@ -9476,7 +9499,7 @@ GameBoyCore.prototype.toTypedArray = function (baseArray, memtype) {
 		return typedArrayTemp;
 	}
 	catch (error) {
-		cout("Could not convert an array to a typed array: " + error.message, 1);
+		//console.log("Could not convert an array to a typed array: " + error.message, 1);
 		return baseArray;
 	}
 }
@@ -9492,7 +9515,7 @@ GameBoyCore.prototype.fromTypedArray = function (baseArray) {
 		return arrayTemp;
 	}
 	catch (error) {
-		cout("Conversion from a typed array failed: " + error.message, 1);
+		//console.log("Conversion from a typed array failed: " + error.message, 1);
 		return baseArray;
 	}
 }
@@ -9522,7 +9545,7 @@ GameBoyCore.prototype.getTypedArray = function (length, defaultValue, numberType
 		}
 	}
 	catch (error) {
-		cout("Could not convert an array to a typed array: " + error.message, 1);
+		//console.log("Could not convert an array to a typed array: " + error.message, 1);
 		var arrayHandle = [];
 		var index = 0;
 		while (index < length) {
@@ -9531,3 +9554,5 @@ GameBoyCore.prototype.getTypedArray = function (length, defaultValue, numberType
 	}
 	return arrayHandle;
 }
+
+export { GameBoyCore }
