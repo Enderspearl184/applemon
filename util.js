@@ -95,7 +95,6 @@ async function updateInteraction(interaction) {
             } else {
                 return await interaction.followUp({ephemeral: true, content: "Only the person who used the command can use this!"}).catch((err)=>{console.error(err)})
             }
-
         }
 
         if (interaction.customId == interaction.customId.toUpperCase()) {
